@@ -2430,7 +2430,7 @@ namespace pl::core {
         if (inVariable || outVariable) {
             bool invalidType = false;
             auto visitingType = type;
-            auto declNestLimit = 128; // some high value so infinite recursion breaks
+            i32 declNestLimit = 32; // default evaluation depth
             while (!invalidType && visitingType && declNestLimit-- > 0) {
                 auto checkType = visitingType->getType();
 
@@ -2444,8 +2444,8 @@ namespace pl::core {
                 }
 
                 if (const auto usingDecl = std::dynamic_pointer_cast<ast::ASTNodeTypeApplication>(checkType); usingDecl != nullptr) {
-                    [[unlikely]] if (usingDecl == visitingType) {
-                        // realistically should never happen but you never know
+                    if (usingDecl == visitingType) [[unlikely]] {
+                        // bad case of forward declarations ending up referencing itself
                         invalidType = true;
                         break;
                     }
